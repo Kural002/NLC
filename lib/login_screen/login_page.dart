@@ -1,143 +1,148 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:form_app/feedback_screen/feedback_page.dart';
 import 'package:form_app/services/auth_gate.dart';
 import 'package:form_app/services/auth_services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-  // Function to launch URLs
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   void _launchURL(String url) async {
     Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw 'Could not launch $url';
+      debugPrint("❌ Could not launch $url");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 40, 20, 50),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 200, bottom: 5),
-              child: Image.asset(
-                'assets/nlc_logo.png',
-                height: 250, // Reduced size for better UI
-                width: 290,
-              ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Full-screen background image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/NLC_night.png',
+              fit: BoxFit.cover,
             ),
-            Column(
+          ),
+
+          // Overlay
+          Positioned.fill(
+            child: Container(color: Colors.black.withOpacity(0.3)),
+          ),
+
+          // UI Content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(padding: EdgeInsets.all(18) ),
-                RichText(
-                  text: TextSpan(
-                    text: 'Welcome to GVTC Feedback Portal!' ,
+                Image.asset('assets/nlc_logo.png', height: 250, width: 290),
+                const SizedBox(height: 20),
+
+                const Text(
+                  'Welcome to GVTC Feedback Portal!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Please sign in to share your feedback and help us improve.',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Colors.white,
                       fontSize: 18,
-                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
-                SizedBox(height: 5),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(11),
-                    child: Text('Please sign in to share your feedback and help us improve. Your insights matter, and we appreciate your time in making GVTC better.' ,),
+                const SizedBox(height: 40),
+
+                // Google Sign-In Button
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final user = await AuthServices().SignInWithGoogle();
+                    if (user != null) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => AuthGate()),
+                      );
+                    }
+                  },
+                  icon: Image.asset('assets/google.png', height: 20),
+                  label: const Text("Sign in with Google"),
+                ),
+                const SizedBox(height: 20),
+
+                // Admin Login Button
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final user = await AuthServices().SignInWithGoogle();
+                    if (user != null) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => FeedbackPage()),
+                      );
+                    }
+                  },
+                  icon: Image.asset('assets/nlc.png', height: 20),
+                  label: const Text("Login as Admin"),
+                ),
+
+                // External Links
+                Padding(
+                  padding: const EdgeInsets.only(top: 70, bottom: 40),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      text: 'Explore Our Official Website ',
+                      style: const TextStyle(fontSize: 14, color: Colors.white),
+                      children: [
+                        TextSpan(
+                          text: 'NLC India Ltd',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap =
+                                () => _launchURL('https://www.nlcindia.in'),
+                        ),
+                        const TextSpan(
+                          text: ' and ',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        TextSpan(
+                          text: 'Learn More About Us',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => _launchURL(
+                                'https://en.wikipedia.org/wiki/NLC_India_Limited'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-            
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 70),
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    elevation: 5,
-                    backgroundColor: Colors.grey.shade200,
-                    side: BorderSide(
-                      color: Colors.grey.shade500,
-                      width: 1,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    AuthServices authServices = AuthServices();
-                    final user = await authServices.SignInWithGoogle();
-
-                    if (user != null) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AuthGate(),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Sign-in failed, try again")),
-                      );
-                    }
-                  },
-                  icon: Image.asset(
-                    'assets/google.png',
-                    height: 15,
-                    width: 15,
-                  ),
-                  label: Text(
-                    "Sign in with Google",
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-              ),
-            ),
-            Spacer(),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                text: 'Explore Our Official Website ',
-                style: TextStyle(fontSize: 14, color: Colors.black),
-                children: [
-                  TextSpan(
-                    text: 'NLC India Ltd',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        _launchURL('https://www.nlcindia.in');
-                      },
-                  ),
-                  TextSpan(
-                    text: ' and ',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                  TextSpan(
-                    text: 'Learn More About Us',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        _launchURL(
-                            'https://en.wikipedia.org/wiki/NLC_India_Limited');
-                      },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
